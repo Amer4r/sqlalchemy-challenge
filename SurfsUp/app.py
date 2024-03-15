@@ -138,21 +138,23 @@ def temp():
 def start_end(start=None, end=None):
     """Retieve the TMIN TAVG and TMAX"""
 
-    start = '2017-04-21'
-    end = '2017-06-23'
-    if end:
+    start = input('Enter the start date ("YYYY-MM-DD")')
+    end = input('Enter the end date ("YYYY-MM-DD")')
+    if end and start:
         # If both start and end dates are provided
         temp_stats = session.query(func.min(measurement.tobs),
                                     func.avg(measurement.tobs),
                                     func.max(measurement.tobs)).\
                                     filter(measurement.date >= start,
                                         measurement.date <= end).all()
-    else:
+    elif start:
         # If only start date is provided
         temp_stats = session.query(func.min(measurement.tobs),
                                     func.avg(measurement.tobs),
                                     func.max(measurement.tobs)).\
                                     filter(measurement.date >= measurement).all()
+    else:
+        temp_stats = None
 
     # Close the session
     session.close()
