@@ -54,7 +54,8 @@ def main():
         f'3. Dates and temperature observations of the most-active station for the previous year of data<br>'
         f'/api/v1.0/tobs<br>'
         f'............................<br>'
-        f'4. Minimum temperature, the average temperature, and the maximum temperature for date range 2017-04-21 to 2017-06-23 <br>'
+        f'4. Minimum temperature, the average temperature, and the maximum temperature for date range <br>'
+        f'/api/v1.0/start'
         f'/api/v1.0/start-end <br>'
         f'~~~~~~~~~~~~~~~~~~~~~~~~~<br>'
 
@@ -134,42 +135,57 @@ def temp():
 # # and the maximum temperature for a specified start or start-end range.
 # # For a specified start, calculate TMIN, TAVG, and TMAX for all the dates greater than or equal to the start date.
 # # For a specified start date and end date, calculate TMIN, TAVG, and TMAX for the dates from the start date to the end date, inclusive.
+@app.route('/api/v1.0/start')
+def start(start=None):
+    """Retieve the TMIN TAVG and TMAX"""
+    # take the input from the user
+    start = input('Enter the start date (YYYY-MM-DD): ')
+    # get the data based on the input
+    temp_stats = session.query(func.min(measurement.tobs),
+                                    func.avg(measurement.tobs),
+                                    func.max(measurement.tobs)).\
+                                    filter(measurement.date >= start).all()
+    # Close the session
+    session.close()
+    # create an empty list
+    start_values = []
+    # add the data into a dictionary and then into the list
+    for min, max, avg in temp_stats:
+        start_dict = {}
+        start_dict['min'] = min
+        start_dict['max'] = max
+        start_dict['avg'] = avg
+        start_values.append(start_dict)
+
+    return jsonify(start_values)
+
 @app.route('/api/v1.0/start-end')
 def start_end(start=None, end=None):
     """Retieve the TMIN TAVG and TMAX"""
 
-    start = input('Enter the start date ("YYYY-MM-DD")')
-    end = input('Enter the end date ("YYYY-MM-DD")')
-    if end and start:
-        # If both start and end dates are provided
-        temp_stats = session.query(func.min(measurement.tobs),
+    # take the input from the user
+    start = input('Enter the start date (YYYY-MM-DD): ')
+    end = input('Enter the end date (YYYY-MM-DD): ')
+    # get the data based on the input
+    start_end_temp_stats = session.query(func.min(measurement.tobs),
                                     func.avg(measurement.tobs),
                                     func.max(measurement.tobs)).\
                                     filter(measurement.date >= start,
                                         measurement.date <= end).all()
-    elif start:
-        # If only start date is provided
-        temp_stats = session.query(func.min(measurement.tobs),
-                                    func.avg(measurement.tobs),
-                                    func.max(measurement.tobs)).\
-                                    filter(measurement.date >= measurement).all()
-    else:
-        temp_stats = None
-
+    
     # Close the session
     session.close()
+    # create an empty list
+    start_end_values = []
+    # add the data into a dictionary and then into the list
+    for min, max, avg in start_end_temp_stats:
+        start_end_dict = {}
+        start_end_dict['min'] = min
+        start_end_dict['max'] = max
+        start_end_dict['avg'] = avg
+        start_end_values.append(start_end_dict)
 
-    # Convert the result to JSON list
-    results = [temp_stats[0][0], temp_stats[0][1], temp_stats[0][2]]
-    result = {
-            "start_date": start,
-            "end_date": end,
-            "TMIN": temp_stats[0][0],
-            "TAVG": temp_stats[0][1],
-            "TMAX": temp_stats[0][2]
-        }
-
-    return jsonify(result)
+    return jsonify(start_end_values)
 
 
 
